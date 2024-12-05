@@ -4,32 +4,58 @@ import { IUser,UserModel } from "../models/userModel";
 import { DatabaseSync } from "node:sqlite";
 
 export class AdminController{
+    // New
     public getAllSellers = async(req:Request,res:Response)=>{
-        try{
-            
-               
-              
-                // res.json({
-                //   posts: posts.slice(from, to).reverse(),
-                //   page,
-                //   pageCount
-                // });
-             
-              
-            const data  = await UserModel.find({role:"Seller"}).select('-password')
-            const sellerCount = data.length;
-            const perPage = 10;
-            const pageCount = Math.ceil(sellerCount / perPage);
-          
-            let page = 5
-            if(page < 1) page = 1;
-            if(page > pageCount) page = pageCount;
-          
-            const from = sellerCount - ((page - 1) * perPage) - 1; // ex.: 44 - ((1 - 1) * 10) -1 = 43 (44 is count, 43 is index)
-            let to = sellerCount - (page * perPage); // ex.: 44 - (1 * 10) = 34
-            if(to < 0) to = 0;
-            sendSuccessResponse(res,200,true,"Data fetched successfuly",data)
-        }
+        try{      
+            const status=req.query.status;
+            const page=parseInt(req.query.page as string)
+            const limit=parseInt(req.query.limit as string)
+            let totalItems;
+            let totalPages;
+            if(page<1 || limit < 1){
+                sendSuccessResponse(res,400,false,"page and limit must be positive integers")
+            }else{
+                const skip=(page-1)*limit;
+                if(status){
+                    const result=await UserModel.find({
+                        role:"Seller",
+                        status:status
+                        })
+                        .sort({updated_at:-1})
+                        .skip(skip)
+                        .limit(limit)
+                        .exec();
+                        totalItems=await UserModel.countDocuments({
+                            role:"Seller",
+                            status:status
+                        })
+                        totalPages=Math.ceil(totalItems/limit);
+                        sendSuccessResponse(res,200,true,`All seller request: ${status}`,result,{
+                            currentPage:page,
+                            totalPages:totalPages,
+                            totalItems:totalItems
+                        })
+
+                    }else{
+                        const result=await UserModel.find({
+                            role:"Seller",
+                            })
+                            .sort({updated_at:-1})
+                            .skip(skip)
+                            .limit(limit)
+                            .exec();
+                            totalItems=await UserModel.countDocuments({
+                                role:"Seller",
+                            })
+                            totalPages=Math.ceil(totalItems/limit);
+                            sendSuccessResponse(res,200,true,`All seller request`,result,{
+                                currentPage:page,
+                                totalPages:totalPages,
+                                totalItems:totalItems
+                            })
+                    }
+                }
+            }
         catch(error){
             sendErrorResponse(res, 404, false, "No data found",error);
         }
