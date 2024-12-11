@@ -37,7 +37,7 @@ const UserSchema = new mongoose.Schema({
     role_specific_details:{} ,
     refreshToken: { type: String },
     status:{
-      type:String,
+      type:String, //enum
       enum:["pending","approved","reject"],
       default:"pending"
     }

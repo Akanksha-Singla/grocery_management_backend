@@ -1,7 +1,6 @@
-import {sendSuccessResponse,sendErrorResponse,sendSuccessToken} from "../utils/responseUtils"
+import {sendSuccessResponse,sendErrorResponse} from "../utils/responseUtils"
 import { Request, Response } from "express";
 import { IUser,UserModel } from "../models/userModel";
-import { DatabaseSync } from "node:sqlite";
 
 export class AdminController{
     // New
@@ -65,7 +64,7 @@ export class AdminController{
         try {
             const  sellerId  = req.params._id;
             const status    = req.query.status
-      console.log("status",status)
+            console.log("status",status)
             // Check if sellerId and status are provided
             if (!sellerId || !status) {
                 sendErrorResponse(res, 400, false, "Seller ID and status are required")

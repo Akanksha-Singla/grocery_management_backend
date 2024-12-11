@@ -22,8 +22,8 @@ const RoleSchema = new mongoose.Schema({
   role_permission: { type: [String], required: true },
   role_specific_details: { type: [], require: true },
   isActive: { type: Boolean, required: true, default: true },
-  created_at: { type: Date, default: Date.now },
-  updated_at: { type: Date, default: Date.now },
+},{
+  timestamps:true
 });
 
 export const RoleModel = mongoose.model<IRole>("Role", RoleSchema);

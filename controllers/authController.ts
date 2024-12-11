@@ -14,7 +14,34 @@ dotenv.config();
 interface IRoleSpecificDetail {
   [key: string]: string | boolean | number;
 }
+export const getUserFromToken = async (
+  req: Request
+): Promise<IUser | undefined> => {
+  try {
+    const token = req.headers.authorization?.split(" ")[1];
 
+    if (!token) {
+      console.error("No token provided");
+      return undefined;
+    }
+
+    const decoded = jwt.verify(token, process.env.SECRET_KEY!) as {
+      id: string;
+      role: string;
+    };
+    const user = (await UserModel.findOne({ _id: decoded.id }).exec()) as IUser;
+
+    if (!user) {
+      console.error("User not found");
+      return undefined;
+    }
+
+    return user;
+  } catch (error) {
+    console.error("Invalid token", error);
+    return undefined;
+  }
+};
 export class AuthController {
   public getUserByEmail = async (email: string) => {
     return await UserModel.findOne({ email: email });
@@ -120,5 +147,6 @@ export class AuthController {
       sendErrorResponse(res, 400, false, `User registration failed ${error}`, error);
     }
   };
+ 
   
 }
