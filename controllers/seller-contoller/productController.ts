@@ -2,6 +2,9 @@ import {sendSuccessResponse,sendErrorResponse,sendSuccessToken} from "../../util
 import { Request, Response } from "express";
 import { IProduct,ProductModel} from "../../models/productModel";
 import { ObjectId } from "mongodb";
+import { UserModel } from "../../models/userModel";
+import jwt from "jsonwebtoken";
+import { IUser } from "../../models/userModel";
 
 export class ProductController{
         public addProduct = async(req: Request,res:Response)=>{
@@ -14,6 +17,7 @@ export class ProductController{
               price,
               quantity,
               availability,
+              imageUrl
               } = req.body
             const newProduct = new ProductModel({
               name,
@@ -22,6 +26,7 @@ export class ProductController{
               price,
               quantity,
               availability,
+              imageUrl
                });
           
               await newProduct.save();
@@ -32,18 +37,42 @@ export class ProductController{
         }}
 
         public getProductsByCategory = async (req:Request, res:Response) => {
+          const token = req.headers.authorization?.split(" ")[1];
+
+          if (!token) {
+            console.error("No token provided");
+            return undefined;
+          }
+      
+          const decoded = jwt.verify(token, process.env.SECRET_KEY!) as {
+            id: string;
+            role: string;
+          };
+
+          console.log("Role",decoded.role);
+          const user = (await UserModel.findOne({ _id: decoded.id }).exec()) as IUser;
             const { categoryId } = req.params;
             console.log("categoryId",categoryId)
           
             try {
               // Find products matching the category ID
-              const products = await ProductModel.find({ category: categoryId }).populate('category', 'name description');
-          
+              if(decoded.role === "Seller")
+             {  const products = await ProductModel.find({ category: categoryId }).populate('category', 'name description');
               if (products.length === 0) {
                 sendSuccessResponse(res, 200, true, "No product found in this category");
               }
+             sendSuccessResponse(res, 200, true, "Products in this category",products);
+            }
           
-              sendSuccessResponse(res, 200, true, "Products in this category",products);
+             if(decoded.role === 'Customer'){
+              const products = await ProductModel.find({ category: categoryId ,availability: true}).populate('category', 'name description');
+              if (products.length === 0) {
+                sendSuccessResponse(res, 200, true, "No product found in this category");
+              }
+               sendSuccessResponse(res, 200, true, "Products in this category",products);
+             }
+          
+             
             } catch (error) {
                 sendErrorResponse(res, 400, false, `Failed to add product ${error}`, error); 
             }
@@ -54,15 +83,36 @@ export class ProductController{
             res: Response
           ): Promise<void> => {
             try {
-              // const _id = new ObjectId(req.params.productid);
+              const token = req.headers.authorization?.split(" ")[1];
+
+              if (!token) {
+                console.error("No token provided");
+                return undefined;
+              }
+          
+              const decoded = jwt.verify(token, process.env.SECRET_KEY!) as {
+                id: string;
+                role: string;
+              };;
               const {_id} = req.params;
               console.log("id",_id)
-              const product = await ProductModel.findOne({
+
+              if(decoded.role === 'Seller'){  const product = await ProductModel.findOne({
                 _id: _id,
                }).populate('category', 'name description');
         
               if (!product) throw "Product not found"
-              sendSuccessResponse(res, 200, true, "product", product);
+              sendSuccessResponse(res, 200, true, "product", product);}
+              if(decoded.role === 'Customer'){
+                const product = await ProductModel.findOne({
+                  _id: _id,
+                  availability:true
+                 }).populate('category', 'name description');
+          
+                if (!product) throw "Product not found"
+                sendSuccessResponse(res, 200, true, "product", product);
+              }
+            
             } catch (error) {
               sendSuccessResponse(res, 500, false, "Error fetching Product", error);
             }
@@ -73,6 +123,18 @@ export class ProductController{
             res: Response
           ): Promise<void> => {
             try {
+              const token = req.headers.authorization?.split(" ")[1];
+
+          if (!token) {
+            console.error("No token provided");
+            return undefined;
+          }
+      
+          const decoded = jwt.verify(token, process.env.SECRET_KEY!) as {
+            id: string;
+            role: string;
+          };
+
               const page = parseInt(req.query.page as string) || 1;
               const limit = parseInt(req.query.limit as string) || 10;
               let totalItems;
@@ -84,20 +146,34 @@ export class ProductController{
         
                 // const user = await getUserFromToken(req);
                 // const retailerId = user?._id;
-        
-                const products= await ProductModel.find().populate('category', 'name description')
-                .sort({updated_at:-1})  
-                .skip(skip)
-                .limit(limit);
-        
-                totalItems = await ProductModel.countDocuments({});
-        
-                totalPages = Math.ceil(totalItems / limit);
-                sendSuccessResponse(res, 200, true, "All Products", products, {
-                  currentPage: page,
-                  totalPages: totalPages,
-                  totalItems: totalItems,
-                });
+                if(decoded.role === 'Seller'){  const products= await ProductModel.find().populate('category', 'name description')
+                  .sort({updated_at:-1})  
+                  .skip(skip)
+                  .limit(limit);
+          
+                  totalItems = await ProductModel.countDocuments({});
+          
+                  totalPages = Math.ceil(totalItems / limit);
+                  sendSuccessResponse(res, 200, true, "All Products", products, {
+                    currentPage: page,
+                    totalPages: totalPages,
+                    totalItems: totalItems,
+                  });}
+                  if(decoded.role ==='Customer'){ 
+                     const products= await ProductModel.find({availability:true}).populate('category', 'name description')
+                    .sort({updated_at:-1})  
+                    .skip(skip)
+                    .limit(limit);
+            
+                    totalItems = await ProductModel.countDocuments({});
+            
+                    totalPages = Math.ceil(totalItems / limit);
+                    sendSuccessResponse(res, 200, true, "All Products", products, {
+                      currentPage: page,
+                      totalPages: totalPages,
+                      totalItems: totalItems,
+                    });}
+              
               }
             } catch (error) {
               sendSuccessResponse(

@@ -9,6 +9,7 @@ import { customerRoutes } from './routes/customerRoutes';
 import { roleRoutes } from './routes/roleRoutes';
 import { categoryRoutes } from './routes/seller-routes/catregoryRoutes';
 import { productRoutes } from './routes/seller-routes/productRoutes';
+import { cartRoutes } from './routes/customer-routes/cartRoutes';
 import cors from "cors"
 
 const app = express();
@@ -32,7 +33,8 @@ dbConnect()
   app.use('/api/seller',sellerRoutes);
   app.use('/api/seller/category',categoryRoutes);
   app.use('/api/seller/product',productRoutes);
-  app.use('/api/role',roleRoutes)
+  app.use('/api/role',roleRoutes);
+  app.use('/api/customer/cart',cartRoutes)
   
   app.get('/', (req, res) => {
     res.send('Hello, World!');
