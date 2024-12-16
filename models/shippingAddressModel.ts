@@ -1,7 +1,7 @@
 import mongoose, { Schema, Document } from 'mongoose';
 
 interface IAddress extends Document {
-  userId: mongoose.Types.ObjectId; // Reference to User
+  user_id: mongoose.Types.ObjectId; // Reference to User
   label: string; // Label for address (e.g., "Home", "Office")
   street: string; // Street address
   city: string; // City
@@ -11,7 +11,7 @@ interface IAddress extends Document {
 }
 
 const ShippingAddressSchema = new Schema<IAddress>({
-  userId: { type: Schema.Types.ObjectId, ref: 'User', required: true },
+  user_id: { type: Schema.Types.ObjectId, ref: 'User', required: true },
   label: { type: String, default: 'Home' },
   street: { type: String, required: true },
   city: { type: String, required: true },
@@ -20,4 +20,4 @@ const ShippingAddressSchema = new Schema<IAddress>({
   isDefault: { type: Boolean, default: false },
 });
 
-export const AddressModel = mongoose.model<IAddress>('Address',  ShippingAddressSchema);
+export const ShippingAddressModel = mongoose.model<IAddress>('Address',  ShippingAddressSchema);

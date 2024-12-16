@@ -15,5 +15,6 @@ cartRoutes.delete("/remove-cart/:_id",verifyToken,authorizeRole('Customer'), car
 
 cartRoutes.get("/getcart",verifyToken,authorizeRole('Customer'), cartController.getCart);
 
-// cartRoutes.put("/updateproductquantity/:productid",validateGetRequest({isPagination:false,isIdRequired:true,idType:'productid'}),validateCart,validateToken,RoleBaseValidation("add_to_cart"), cartController.updateQuantity);
+cartRoutes.put("/updateproductquantity/:_id",verifyToken,authorizeRole('Customer'),cartController.updateQuantity);
+cartRoutes.delete("/removeProduct/:_id",verifyToken,authorizeRole('Customer'),cartController.removeProductFromCart);
 

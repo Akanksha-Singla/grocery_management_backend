@@ -36,47 +36,62 @@ export class ProductController{
             sendErrorResponse(res, 400, false, `Failed to add product ${error}`, error);
         }}
 
-        public getProductsByCategory = async (req:Request, res:Response) => {
-          const token = req.headers.authorization?.split(" ")[1];
-
-          if (!token) {
-            console.error("No token provided");
-            return undefined;
-          }
-      
-          const decoded = jwt.verify(token, process.env.SECRET_KEY!) as {
-            id: string;
-            role: string;
-          };
-
-          console.log("Role",decoded.role);
-          const user = (await UserModel.findOne({ _id: decoded.id }).exec()) as IUser;
+        public getProductsByCategory = async (req: Request, res: Response) => {
+          try {
+            const token = req.headers.authorization?.split(" ")[1];
+        
+            if (!token) {
+              console.error("No token provided");
+               sendErrorResponse(res, 401, false, "Unauthorized: No token provided");
+               return
+            }
+        
+            const decoded = jwt.verify(token, process.env.SECRET_KEY!) as {
+              id: string;
+              role: string;
+            };
+        
+            console.log("Role", decoded.role);
+        
+            const user = (await UserModel.findOne({ _id: decoded.id }).exec()) as IUser;
+        
             const { categoryId } = req.params;
-            console.log("categoryId",categoryId)
-          
-            try {
-              // Find products matching the category ID
-              if(decoded.role === "Seller")
-             {  const products = await ProductModel.find({ category: categoryId }).populate('category', 'name description');
-              if (products.length === 0) {
-                sendSuccessResponse(res, 200, true, "No product found in this category");
-              }
-             sendSuccessResponse(res, 200, true, "Products in this category",products);
+            console.log("categoryId", categoryId);
+        
+            let products;
+        
+            // Fetch products based on user role
+            if (decoded.role === "Seller") {
+              products = await ProductModel.find({ category: categoryId }).populate(
+                "category",
+                "name description"
+              );
+            } else if (decoded.role === "Customer") {
+              products = await ProductModel.find({ category: categoryId, availability: true }).populate(
+                "category",
+                "name description"
+              );
+            } else {
+               sendErrorResponse(res, 403, false, "Forbidden: Invalid user role");
+               return
             }
-          
-             if(decoded.role === 'Customer'){
-              const products = await ProductModel.find({ category: categoryId ,availability: true}).populate('category', 'name description');
-              if (products.length === 0) {
-                sendSuccessResponse(res, 200, true, "No product found in this category");
-              }
-               sendSuccessResponse(res, 200, true, "Products in this category",products);
-             }
-          
-             
-            } catch (error) {
-                sendErrorResponse(res, 400, false, `Failed to add product ${error}`, error); 
+        
+            // Handle case where no products are found
+            if (!products || products.length === 0) {
+               sendSuccessResponse(res, 200, true, "No product found in this category");
+               return
             }
-          };
+        
+            // Send success response with products
+             sendSuccessResponse(res, 200, true, "Products in this category", products);
+             return
+          } catch (error) {
+            console.error("Error fetching products by category:", error);
+             sendErrorResponse(res, 400, false, `Failed to fetch products`, error);
+             return
+          }
+        };
+        
          
           public getProductById = async (
             req: Request,
@@ -230,47 +245,84 @@ export class ProductController{
             }
           };
          
-          public searchProduct = async (
-            req: Request,
-            res: Response
-          ): Promise<void> => {
+          public searchProduct = async (req: Request, res: Response): Promise<void> => {
             try {
-              const { query } = req.query;
-              console.log("query",query)
-        
-              if (!query) throw  "Query parameter is required and must be a string Or Unauthorized or invalid user details."
-               else {
-                const searchFields = ["name", "description"];
-               
-        
-                let products: IProduct[] = [];
-        
-                for (let field of searchFields) {
-                  products= await ProductModel.find({
-                   [field]: { $regex: query, $options: "i" },
-                    // [field]: query,
-                  }).populate('category','name description').exec();
-        
-                  if (products.length > 0) {
-                    break;
-                  }
-                }
-                if (products.length === 0) {
-                  sendSuccessResponse(res,200,true,"No product found matching the search criteria",products)
-                } else {
-                  sendSuccessResponse(res,200,true,"data",products)
-                }
+              const token = req.headers.authorization?.split(" ")[1];
+          
+              if (!token) {
+                console.error("No token provided");
+                 sendErrorResponse(res, 401, false, "Unauthorized: No token provided");
+                 return
               }
+          
+              const decoded = jwt.verify(token, process.env.SECRET_KEY!) as {
+                id: string;
+                role: string;
+              };
+          
+              console.log("Role", decoded.role);
+          
+              const { query } = req.query;
+              if (!query || typeof query !== "string") {
+                 sendErrorResponse(res, 400, false, "Query parameter is required and must be a string");
+                 return;
+              }
+          
+              const searchFields = ["name", "description"];
+              let products: IProduct[] = [];
+          
+              // Fetch products based on user role and search query
+              for (let field of searchFields) {
+                if (decoded.role === "Seller") {
+                  products = await ProductModel.find({
+                    [field]: { $regex: query, $options: "i" },
+                  })
+                    .populate("category", "name description")
+                    .exec();
+                } else if (decoded.role === "Customer") {
+                  products = await ProductModel.find({
+                    [field]: { $regex: query, $options: "i" },
+                    availability: true, // Only available products for customers
+                  })
+                    .populate("category", "name description")
+                    .exec();
+                } else {
+                  sendErrorResponse(res, 403, false, "Forbidden: Invalid user role");
+                  return
+                }
+          
+                // Stop searching if products are found
+                if (products.length > 0) break;
+              }
+          
+              // Handle case where no products match the query
+              if (products.length === 0) {
+                 sendSuccessResponse(
+                  res,
+                  200,
+                  true,
+                  "No products found matching the search criteria",
+                  products
+                );
+                return;
+              }
+          
+              // Send success response with products
+               sendSuccessResponse(res, 200, true, "Search results", products);
+               return
             } catch (error) {
-              sendErrorResponse(
+              console.error("Error searching products:", error);
+               sendErrorResponse(
                 res,
                 500,
                 false,
-                "Error searching request:",
+                `Failed to perform search`,
                 error
               );
+              return
             }
           };
+          
 
           public updateAvailablity = async(req:Request,res:Response)=>{
                try{

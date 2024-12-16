@@ -144,17 +144,15 @@ console.log("cart:",customerCart)
       const customer_id = user?._id;
       const product_id = req.params._id;
       const quantity_purchased = req.body.quantity_purchased;
+      console.log(customer_id,product_id,quantity_purchased)
       if(!quantity_purchased) throw  "quantity please add quantity"
       const status = req.body.status;
-      let cart = await CartModel.findOne({customer_id:customer_id});
-      const product = await ProductModel.findById(product_id)
-
+      let cart = await CartModel.findOne({user_id:customer_id});
+      console.log("cart:",cart)
+      const product = await ProductModel.findById({_id:product_id})
+      console.log("product:",product)
       if(cart && product){
-        const quantity = product.quantity;
-
-      //   const price= product.price;
-      // const product_name = product.name;
-      // const product_image = product.imageUrl;
+       
         const itemIndex = cart.items.findIndex(
           (item) =>
             JSON.stringify(item.product_id) == JSON.stringify(product_id)
@@ -191,7 +189,7 @@ console.log("cart:",customerCart)
         }
 
         cart.total_amount = cart.items.reduce(
-          (sum, item) => sum + item.quantity * item.price,
+          (sum, item) => sum + item.quantity_purchased * item.price,
           0
         );
         console.log(cart);

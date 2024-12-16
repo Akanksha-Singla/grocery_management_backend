@@ -18,6 +18,7 @@ role:string;
 role_specific_details:any;
 status:string;
 refreshToken?:string
+
 // resetPasswordToken: string| undefined;
 // resetPasswordTokenExpires: Date | undefined;
 }

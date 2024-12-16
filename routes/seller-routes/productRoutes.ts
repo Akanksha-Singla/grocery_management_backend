@@ -14,6 +14,6 @@ productRoutes.get('/getProductById/:_id',verifyToken,authorizeRole("Seller","Cus
 productRoutes.get('/getProductByCategory/:categoryId',verifyToken,authorizeRole("Seller","Customer"),productController.getProductsByCategory)
 productRoutes.delete('/deleteProduct/:_id',verifyToken,authorizeRole("Seller"),productController.deleteProduct)
 productRoutes.put('/updateProduct/:_id',verifyToken,authorizeRole("Seller"),validateCreateProduct,productController.updateProduct)
-productRoutes.get('/search',verifyToken,authorizeRole("Seller"),productController.searchProduct)
+productRoutes.get('/search',verifyToken,authorizeRole("Seller","Customer"),productController.searchProduct)
 productRoutes.patch('/updateAvailability/:_id',verifyToken,authorizeRole('Seller'),productController.updateAvailablity);
 productRoutes.post("/uploadProductImage", upload.single('recfile'), uploadToCloudinary("user_image"));

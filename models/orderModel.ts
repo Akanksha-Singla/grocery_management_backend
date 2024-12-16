@@ -1,8 +1,10 @@
 import mongoose, { Schema, Document } from 'mongoose';
+import { ICart,CartSchema } from './cartModel';
 
 interface IOrderItem {
+  productName:string;
   productId: mongoose.Types.ObjectId; // Reference to Product
-  quantity: number; // Quantity of the product
+  quantity_purchased: number; // Quantity of the product
   price: number; // Price at the time of purchase
 }
 
@@ -22,15 +24,16 @@ const OrderSchema = new Schema<Order>({
   items: [
     {
       productId: { type: Schema.Types.ObjectId, ref: 'Product', required: true },
-      quantity: { type: Number, required: true },
+      quantity_purchased: { type: Number, required: true },
       price: { type: Number, required: true },
+      productName:{type:String,required:true}
     },
   ],
   totalPrice: { type: Number, required: true },
   address: { type: Schema.Types.ObjectId, ref: 'Address', required: true },
   paymentStatus: {
     type: String,
-    enum: ['pending', 'completed', 'failed'],
+    enum: ['pending', 'paid', 'failed'],
     default: 'pending',
   },
   orderStatus: {

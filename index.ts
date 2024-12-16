@@ -10,6 +10,8 @@ import { roleRoutes } from './routes/roleRoutes';
 import { categoryRoutes } from './routes/seller-routes/catregoryRoutes';
 import { productRoutes } from './routes/seller-routes/productRoutes';
 import { cartRoutes } from './routes/customer-routes/cartRoutes';
+import { orderRoutes } from './routes/customer-routes/orderRoutes';
+import { shippingRoutes } from './routes/customer-routes/shippingAddressRoutes';
 import cors from "cors"
 
 const app = express();
@@ -34,7 +36,9 @@ dbConnect()
   app.use('/api/seller/category',categoryRoutes);
   app.use('/api/seller/product',productRoutes);
   app.use('/api/role',roleRoutes);
-  app.use('/api/customer/cart',cartRoutes)
+  app.use('/api/customer/cart',cartRoutes);
+  app.use('/api/customer/order',orderRoutes);
+  app.use('/api/customer/address',shippingRoutes);
   
   app.get('/', (req, res) => {
     res.send('Hello, World!');
