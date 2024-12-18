@@ -7,7 +7,7 @@ export const validateOrder = (req: Request, res: Response, next: NextFunction): 
     try{
      const schema = Joi.object({
             address:Joi.string().required(),
-            paymentMode:Joi.string().required(),
+            paymentMode:Joi.string().optional(),
             created_at: Joi.date().optional(),
             isActive: Joi.boolean().optional(),   
         }).unknown();

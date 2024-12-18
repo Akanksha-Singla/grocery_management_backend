@@ -17,6 +17,7 @@ interface Order extends Document {
   address: mongoose.Types.ObjectId; // Reference to User Address
   paymentStatus: PaymentStatus; // Payment status: 'pending', 'completed', 'failed'
   orderStatus: OrderStatus; // Order status: 'pending', 'shipped', 'delivered', 'cancelled'
+  razorpayOrderId:string;
   createdAt: Date; // Order creation time
   updatedAt: Date; // Order last updated time
 
@@ -33,6 +34,7 @@ const OrderSchema = new Schema<Order>({
     },
   ],
   totalPrice: { type: Number, required: true },
+  razorpayOrderId:{type:String},
   address: { type: Schema.Types.ObjectId, ref: 'Address', required: true },
    paymentStatus: {
       type: String,
