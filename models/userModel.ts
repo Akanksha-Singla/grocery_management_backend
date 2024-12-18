@@ -1,5 +1,6 @@
 import mongoose,{Document} from "mongoose"
 import { IRole} from "./roleModel";
+import { UserStatus } from "../utils/enumUtils";
 
 
 
@@ -39,8 +40,8 @@ const UserSchema = new mongoose.Schema({
     refreshToken: { type: String },
     status:{
       type:String, //enum
-      enum:["pending","approved","reject"],
-      default:"pending"
+      enum: Object.values(UserStatus),
+      default:UserStatus.Pending
     }
     //isActive:{ type: Boolean, required: true, default:true },
 },{

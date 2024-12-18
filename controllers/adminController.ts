@@ -1,6 +1,7 @@
 import {sendSuccessResponse,sendErrorResponse} from "../utils/responseUtils"
 import { Request, Response } from "express";
 import { IUser,UserModel } from "../models/userModel";
+import { UserStatus } from "../utils/enumUtils";
 
 export class AdminController{
     // New
@@ -60,41 +61,46 @@ export class AdminController{
         }
     }
 
-    public updateSellerStatus = async (req: Request, res: Response) => {
-        try {
-            const  sellerId  = req.params._id;
-            const status    = req.query.status
-            console.log("status",status)
-            // Check if sellerId and status are provided
-            if (!sellerId || !status) {
-                sendErrorResponse(res, 400, false, "Seller ID and status are required")
-                return;
-            }
-    
-            // Ensure the status is a valid status
-            const validStatuses = ["pending", "approved", "reject"]; // Modify according to your status types
-            if (!validStatuses.includes(req.query.status as string)) {
-                sendErrorResponse(res, 400, false, "Invalid status");
-                return;
-            }
-    
-            // Update the seller's status
-            const updatedSeller = await UserModel.findOneAndUpdate(
-                { _id: sellerId, role: "Seller" }, // Make sure we are updating a seller
-                { $set: { status: status } }, // Update the status field
-                { new: true } // Return the updated document
-            );
-    
-            if (!updatedSeller) {
-             sendErrorResponse(res, 404, false, "Seller not found or status not updated");
-             return; 
-            }
-    
-            sendSuccessResponse(res, 200, true, "Seller status updated successfully", updatedSeller);
-        } catch (error) {
-            sendErrorResponse(res, 500, false, "An error occurred while updating status", error);
-        }
-    }
-    
 
+    
+    public updateSellerStatus = async (req: Request, res: Response): Promise<void> => {
+      try {
+        // Destructure parameters and query
+        const { _id: sellerId } = req.params;
+        const { status } = req.query;
+    
+        console.log("Requested Status:", status);
+    
+        // Validate inputs
+        if (!sellerId || !status) {
+          sendErrorResponse(res, 400, false, "Seller ID and status are required");
+          return;
+        }
+    
+        // Validate status using the enum
+        if (!Object.values(UserStatus).includes(status as UserStatus)) {
+          sendErrorResponse(res, 400, false, `Invalid status. Allowed values: ${Object.values(UserStatus).join(", ")}`);
+          return;
+        }
+    
+        // Update the seller's status
+        const updatedSeller = await UserModel.findOneAndUpdate(
+          { _id: sellerId, role: "Seller" }, 
+          { $set: { status } }, 
+          { new: true } 
+        );
+    
+        // Handle case where seller is not found
+        if (!updatedSeller) {
+          sendErrorResponse(res, 404, false, "Seller not found or status not updated");
+          return;
+        }
+    
+        // Success response
+        sendSuccessResponse(res, 200, true, "Seller status updated successfully", updatedSeller);
+      } catch (error) {
+        console.error("Error updating seller status:", error);
+        sendErrorResponse(res, 500, false, "An error occurred while updating status", error);
+      }
+    };
 }

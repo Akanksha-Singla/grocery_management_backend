@@ -1,5 +1,7 @@
 import mongoose, { Schema, Document } from 'mongoose';
 import { ICart,CartSchema } from './cartModel';
+import { PaymentStatus } from '../utils/enumUtils';
+import { OrderStatus } from '../utils/enumUtils';
 
 interface IOrderItem {
   productName:string;
@@ -13,10 +15,11 @@ interface Order extends Document {
   items: IOrderItem[]; // Array of purchased items
   totalPrice: number; // Total price of the order
   address: mongoose.Types.ObjectId; // Reference to User Address
-  paymentStatus: string; // Payment status: 'pending', 'completed', 'failed'
-  orderStatus: string; // Order status: 'pending', 'shipped', 'delivered', 'cancelled'
+  paymentStatus: PaymentStatus; // Payment status: 'pending', 'completed', 'failed'
+  orderStatus: OrderStatus; // Order status: 'pending', 'shipped', 'delivered', 'cancelled'
   createdAt: Date; // Order creation time
   updatedAt: Date; // Order last updated time
+
 }
 
 const OrderSchema = new Schema<Order>({
@@ -31,16 +34,16 @@ const OrderSchema = new Schema<Order>({
   ],
   totalPrice: { type: Number, required: true },
   address: { type: Schema.Types.ObjectId, ref: 'Address', required: true },
-  paymentStatus: {
-    type: String,
-    enum: ['pending', 'paid', 'failed'],
-    default: 'pending',
-  },
-  orderStatus: {
-    type: String,
-    enum: ['pending', 'shipped', 'delivered', 'cancelled'],
-    default: 'pending',
-  },
+   paymentStatus: {
+      type: String,
+      enum: Object.values(PaymentStatus), // Use enum values
+      default: PaymentStatus.Pending,
+    },
+    orderStatus: {
+      type: String,
+      enum: Object.values(OrderStatus), // Use enum values
+      default: OrderStatus.Pending,
+    },
  
 },{
     timestamps:true

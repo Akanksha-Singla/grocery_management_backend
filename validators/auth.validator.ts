@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 import Joi from "joi";
+import { UserStatus } from "../utils/enumUtils";
 
 export const validateRegisterUser = (
   req: Request,
@@ -39,8 +40,9 @@ export const validateRegisterUser = (
 
   refreshToken: Joi.string().optional(),
   status: Joi.string()
-    .valid('pending', 'approved', 'reject')
-    .default('pending'),
+    .valid(...Object.values(UserStatus))
+    .default(UserStatus.Pending),
+
       }).unknown();
 
     const { error } = schema.validate(req.body);

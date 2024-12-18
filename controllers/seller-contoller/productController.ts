@@ -5,6 +5,7 @@ import { ObjectId } from "mongodb";
 import { UserModel } from "../../models/userModel";
 import jwt from "jsonwebtoken";
 import { IUser } from "../../models/userModel";
+import { getUserFromToken } from "../authController";
 
 export class ProductController{
         public addProduct = async(req: Request,res:Response)=>{
@@ -38,22 +39,14 @@ export class ProductController{
 
         public getProductsByCategory = async (req: Request, res: Response) => {
           try {
-            const token = req.headers.authorization?.split(" ")[1];
+           
+            const userToken = await getUserFromToken(req);
+              const role = userToken?.role
+              const _id =userToken?._id
         
-            if (!token) {
-              console.error("No token provided");
-               sendErrorResponse(res, 401, false, "Unauthorized: No token provided");
-               return
-            }
+            console.log("Role",role);
         
-            const decoded = jwt.verify(token, process.env.SECRET_KEY!) as {
-              id: string;
-              role: string;
-            };
-        
-            console.log("Role", decoded.role);
-        
-            const user = (await UserModel.findOne({ _id: decoded.id }).exec()) as IUser;
+            const user = (await UserModel.findOne({ _id:_id }).exec()) as IUser;
         
             const { categoryId } = req.params;
             console.log("categoryId", categoryId);
@@ -61,12 +54,12 @@ export class ProductController{
             let products;
         
             // Fetch products based on user role
-            if (decoded.role === "Seller") {
+            if (role === "Seller") {
               products = await ProductModel.find({ category: categoryId }).populate(
                 "category",
                 "name description"
               );
-            } else if (decoded.role === "Customer") {
+            } else if (role === "Customer") {
               products = await ProductModel.find({ category: categoryId, availability: true }).populate(
                 "category",
                 "name description"
@@ -98,27 +91,18 @@ export class ProductController{
             res: Response
           ): Promise<void> => {
             try {
-              const token = req.headers.authorization?.split(" ")[1];
-
-              if (!token) {
-                console.error("No token provided");
-                return undefined;
-              }
-          
-              const decoded = jwt.verify(token, process.env.SECRET_KEY!) as {
-                id: string;
-                role: string;
-              };;
-              const {_id} = req.params;
+              const user = await getUserFromToken(req);
+              const role = user?.role
+               const {_id} = req.params;
               console.log("id",_id)
 
-              if(decoded.role === 'Seller'){  const product = await ProductModel.findOne({
+              if(role === 'Seller'){  const product = await ProductModel.findOne({
                 _id: _id,
                }).populate('category', 'name description');
         
               if (!product) throw "Product not found"
               sendSuccessResponse(res, 200, true, "product", product);}
-              if(decoded.role === 'Customer'){
+              if(role === 'Customer'){
                 const product = await ProductModel.findOne({
                   _id: _id,
                   availability:true
@@ -138,17 +122,12 @@ export class ProductController{
             res: Response
           ): Promise<void> => {
             try {
-              const token = req.headers.authorization?.split(" ")[1];
+        
+          const user = await getUserFromToken(req);
+          const role = user?.role
+           const {_id} = req.params;
+          console.log("id",_id)
 
-          if (!token) {
-            console.error("No token provided");
-            return undefined;
-          }
-      
-          const decoded = jwt.verify(token, process.env.SECRET_KEY!) as {
-            id: string;
-            role: string;
-          };
 
               const page = parseInt(req.query.page as string) || 1;
               const limit = parseInt(req.query.limit as string) || 10;
@@ -161,7 +140,7 @@ export class ProductController{
         
                 // const user = await getUserFromToken(req);
                 // const retailerId = user?._id;
-                if(decoded.role === 'Seller'){  const products= await ProductModel.find().populate('category', 'name description')
+                if(role === 'Seller'){  const products= await ProductModel.find().populate('category', 'name description')
                   .sort({updated_at:-1})  
                   .skip(skip)
                   .limit(limit);
@@ -174,7 +153,7 @@ export class ProductController{
                     totalPages: totalPages,
                     totalItems: totalItems,
                   });}
-                  if(decoded.role ==='Customer'){ 
+                  if(role ==='Customer'){ 
                      const products= await ProductModel.find({availability:true}).populate('category', 'name description')
                     .sort({updated_at:-1})  
                     .skip(skip)
@@ -247,21 +226,13 @@ export class ProductController{
          
           public searchProduct = async (req: Request, res: Response): Promise<void> => {
             try {
-              const token = req.headers.authorization?.split(" ")[1];
-          
-              if (!token) {
-                console.error("No token provided");
-                 sendErrorResponse(res, 401, false, "Unauthorized: No token provided");
-                 return
-              }
-          
-              const decoded = jwt.verify(token, process.env.SECRET_KEY!) as {
-                id: string;
-                role: string;
-              };
-          
-              console.log("Role", decoded.role);
-          
+            
+              
+              const user = await getUserFromToken(req);
+              const role = user?.role
+               const {_id} = req.params;
+              console.log("id",_id)
+    
               const { query } = req.query;
               if (!query || typeof query !== "string") {
                  sendErrorResponse(res, 400, false, "Query parameter is required and must be a string");
@@ -273,13 +244,13 @@ export class ProductController{
           
               // Fetch products based on user role and search query
               for (let field of searchFields) {
-                if (decoded.role === "Seller") {
+                if (role === "Seller") {
                   products = await ProductModel.find({
                     [field]: { $regex: query, $options: "i" },
                   })
                     .populate("category", "name description")
                     .exec();
-                } else if (decoded.role === "Customer") {
+                } else if (role === "Customer") {
                   products = await ProductModel.find({
                     [field]: { $regex: query, $options: "i" },
                     availability: true, // Only available products for customers

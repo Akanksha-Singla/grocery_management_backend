@@ -10,6 +10,6 @@ import { validateCart } from "../../validators/cart.validator";
 const shippingAddressController  = new ShippingAddressController ()
 export const shippingRoutes = express();
 
-shippingRoutes.post('/add-address',verifyToken,authorizeRole('Customer'),validateCart,shippingAddressController.addShippingAddress)
+shippingRoutes.post('/add-address',verifyToken,authorizeRole('Customer'),shippingAddressController.addShippingAddress)
 shippingRoutes.get('/getAllLocation',verifyToken,authorizeRole('Customer'),shippingAddressController.getAllShippingAddresses)
 

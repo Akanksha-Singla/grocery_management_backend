@@ -7,8 +7,7 @@ import {
 import { getUserFromToken } from "../authController";
 
 export class ShippingAddressController {
-  // Add Shipping Address
-  //address_id:675d74d7eb4bdd0cc53dc593
+
   public addShippingAddress = async (req: Request, res: Response) => {
     try {
       const user = await getUserFromToken(req); // Extract user from token

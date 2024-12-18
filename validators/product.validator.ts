@@ -34,9 +34,9 @@ export const validateCreateProduct = (
         "number.min": "Quantity cannot be negative.",
         "any.required": "Quantity is mandatory."
       }),
-      imageUrl: Joi.string().uri().optional().messages({
-        "string.uri": "Image URL must be a valid URI."
-      }),
+      // imageUrl: Joi.string().optional().messages({
+      //   "string.uri": "Image URL must be a valid URI."
+      // }),
       availability: Joi.boolean().default(true),
       sellerId: Joi.string().pattern(/^[0-9a-fA-F]{24}$/).optional().messages({
         "string.pattern.base": "Invalid ObjectId for sellerId."
@@ -84,7 +84,7 @@ export const validateUpdateProduct = (
     //     .optional(),
       price: Joi.number().positive().precision(2).optional(),
       quantity: Joi.number().integer().min(0).optional(),
-      imageUrl: Joi.string().uri().optional(),
+      // imageUrl: Joi.string().uri().optional(),
       availability: Joi.boolean().optional(),
       sellerId: Joi.string().pattern(/^[0-9a-fA-F]{24}$/).optional(),
       rating: Joi.number().min(0).max(5).optional(),

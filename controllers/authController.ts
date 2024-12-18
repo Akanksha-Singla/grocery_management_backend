@@ -99,36 +99,36 @@ export class AuthController {
         contact_number,
         address,
         role,
-        role_specific_details: inputRoleSpecificDetails = {}, // Default to empty object
+        role_specific_details: inputRoleSpecificDetails = {}, 
       } = req.body;
   
-      // Hash the password
+     
       const hash = await bcrypt.hash(password, 10);
   
-      // Find the role from the database
+      
       const rolePerson = (await RoleModel.findOne({ role_name: role })) as IRole;
   
       if (!rolePerson) throw "Invalid role provided";
   
-      // Handle role-specific details if any
+     
       let role_specific_details: IRoleSpecificDetail = {};
   
       const roleTemplate = rolePerson.role_specific_details;
   
-      // Only process role-specific details if a role template exists
+      
       if (roleTemplate && Array.isArray(roleTemplate)) {
         for (const field of roleTemplate) {
           const fieldName = field.name;
-          // Check if the field is present in inputRoleSpecificDetails
+
           if (inputRoleSpecificDetails && inputRoleSpecificDetails[fieldName]) {
             role_specific_details[fieldName] = inputRoleSpecificDetails[fieldName];
           } else {
-            role_specific_details[fieldName] = ""; // Or default value if needed
+            role_specific_details[fieldName] = ""; 
           }
         }
       }
   
-      // Create and save the new user
+   
       const newUser = new UserModel({
         username,
         password: hash,
@@ -147,6 +147,27 @@ export class AuthController {
       sendErrorResponse(res, 400, false, `User registration failed ${error}`, error);
     }
   };
- 
+  
+  public getUser = async (req: Request, res: Response) => {
+    try {
+      const token = req.headers.authorization?.split(" ")[1];
+
+      if (!token) throw`No token provided`
+       else {
+        const decoded = jwt.verify(token, process.env.SECRET_KEY!) as {
+          id: string;
+          role: string;
+        };
+        const user = (await UserModel.findOne({
+          _id: decoded.id,
+        }).exec()) as IUser;
+
+        if (!user) throw `User not found`
+        sendSuccessResponse(res, 200, true, "user", user);
+      }
+    } catch (error) {
+      sendErrorResponse(res, 500, false, `Internal server error`,error);
+    }
+  };
   
 }
