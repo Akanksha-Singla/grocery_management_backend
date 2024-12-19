@@ -5,11 +5,12 @@ import { authorizeRole } from "../../middlewares/role.middleware";
 import { validateCart } from "../../validators/cart.validator";
 
 
+
 const cartController = new CartController()
 export const cartRoutes = express();
 
 cartRoutes.post('/add-to-cart/:_id',verifyToken,authorizeRole('Customer'),validateCart,cartController.addProductToCart)
-cartRoutes.get("/remove-productfromcart/:_id",verifyToken,authorizeRole('Customer'), cartController.removeProductFromCart);
+
 
 cartRoutes.delete("/remove-cart/:_id",verifyToken,authorizeRole('Customer'), cartController.removeCart);
 

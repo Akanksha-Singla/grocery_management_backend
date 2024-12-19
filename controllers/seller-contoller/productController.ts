@@ -166,7 +166,8 @@ export class ProductController{
                       currentPage: page,
                       totalPages: totalPages,
                       totalItems: totalItems,
-                    });}
+                    });
+                   }
               
               }
             } catch (error) {

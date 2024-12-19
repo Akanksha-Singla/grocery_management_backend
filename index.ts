@@ -15,7 +15,7 @@ import { shippingRoutes } from './routes/customer-routes/shippingAddressRoutes';
 import cors from "cors"
 
 const app = express();
-// dotenv.config();
+
 const port = process.env.PORT
 
 app.use(cors());

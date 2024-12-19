@@ -1,8 +1,5 @@
 import mongoose from "mongoose";
 
-// import dotenv from 'dotenv';
-// dotenv.config();
-
  export const dbConnect = async()=>{
   if(process.env.MONGODB_URL){
     try{
@@ -19,10 +16,3 @@ import mongoose from "mongoose";
   }
   
  }
-// if(process.env.MONGODB_URL)
-// mongoose
-//   .connect(process.env.MONGODB_URL)
-//   .then((success) => {
-//     console.log("connect,connected.....");
-//   })
-//   .catch((err) => console.log(err));
