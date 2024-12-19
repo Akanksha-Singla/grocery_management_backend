@@ -21,7 +21,7 @@ pids
 /build/
 /coverage/
 
-# Environment variables
+
 .env
 
 
