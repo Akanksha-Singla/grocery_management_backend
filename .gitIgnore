@@ -23,8 +23,7 @@ pids
 
 # Environment variables
 .env
-.env.local
-.env.*.local
+
 
 # Angular specific
 .angular/cache
